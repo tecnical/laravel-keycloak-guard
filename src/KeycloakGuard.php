@@ -202,14 +202,10 @@ class KeycloakGuard implements Guard
      */
     public function hasRealmRole($role)
     {
-        $realm_roles = (array)$this->decodedToken->realm_access;
+        $realm_roles = $this->decodedToken->realm_access->roles;
 
-        if (array_key_exists('roles', $realm_roles)) {
-            $token_realm_values = (array)$realm_roles['roles'];
-
-            if (Arr::has($token_realm_values, $role)) {
-                return true;
-            }
+        if (Arr::has($realm_roles, $role)) {
+            return true;
         }
 
         return false;
@@ -244,14 +240,10 @@ class KeycloakGuard implements Guard
      */
     public function hasAnyRealmRole(array $roles)
     {
-        $realm_roles = (array)$this->decodedToken->realm_access;
+        $realm_roles = $this->decodedToken->realm_access->roles;
 
-        if (array_key_exists('roles', $realm_roles)) {
-            $token_realm_values = (array)$realm_roles['roles'];
-
-            if (Arr::hasAny($token_realm_values, $roles)) {
-                return true;
-            }
+        if (Arr::hasAny($realm_roles, $roles)) {
+            return true;
         }
 
         return false;
