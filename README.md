@@ -9,7 +9,10 @@
 
 </p>
 
-# Simple Keycloak Guard for Laravel
+# Keycloak Guard for Laravel
+
+This package is a fork of https://github.com/robsontenorio/laravel-keycloak-guard
+
 
 This package helps you authenticate users on a Laravel API based on JWT tokens generated from **Keycloak Server**.
 
@@ -256,7 +259,7 @@ $token = Auth::token()  // or Auth::user()->token()
 ```
 
 #### Role
-`hasRole('some-resource', 'some-role')`
+`hasResourceRole('some-resource', 'some-role')`
 _Check if authenticated user has a role on resource_access_
 
 ```php
@@ -279,18 +282,35 @@ _Check if authenticated user has a role on resource_access_
 ```
 
 ```php
-Auth::hasRole('myapp-backend', 'myapp-backend-role1') // true
-Auth::hasRole('myapp-frontend', 'myapp-frontend-role1') // true
-Auth::hasRole('myapp-backend', 'myapp-frontend-role1') // false
+Auth::hasResourceRole('myapp-backend', 'myapp-backend-role1') // true
+Auth::hasResourceRole('myapp-frontend', 'myapp-frontend-role1') // true
+Auth::hasResourceRole('myapp-backend', 'myapp-frontend-role1') // false
 ```
 
-`hasAnyRole('some-resource', ['some-role1', 'some-role2'])`
+`hasAnyResourceRole('some-resource', ['some-role1', 'some-role2'])`
 _Check if the authenticated user has any of the roles in resource_access_
 
 ```php
-Auth::hasAnyRole('myapp-backend', ['myapp-backend-role1', 'myapp-backend-role3']) // true
-Auth::hasAnyRole('myapp-frontend', ['myapp-frontend-role1', 'myapp-frontend-role3']) // true
-Auth::hasAnyRole('myapp-backend', ['myapp-frontend-role1', 'myapp-frontend-role2']) // false
+Auth::hasAnyResourceRole('myapp-backend', ['myapp-backend-role1', 'myapp-backend-role3']) // true
+Auth::hasAnyResourceRole('myapp-frontend', ['myapp-frontend-role1', 'myapp-frontend-role3']) // true
+Auth::hasAnyResourceRole('myapp-backend', ['myapp-frontend-role1', 'myapp-frontend-role2']) // false
+```
+
+`hasRealmRole('some-role')`
+_Check if authenticated user has a role on resource_access_
+
+```php
+Auth::hasRealmRole('myapp-backend-role1') // true
+Auth::hasRealmRole('myapp-frontend-role1') // true
+```
+
+
+`hasAnyRealmRole(['some-role1', 'some-role2'])`
+_Check if the authenticated user has any of the roles in resource_access_
+
+```php
+Auth::hasAnyRealmRole(['myapp-backend-role1', 'myapp-backend-role3']) // true
+Auth::hasAnyRealmRole(['myapp-frontend-role1', 'myapp-frontend-role2']) // false
 ```
 
 #### Scope
