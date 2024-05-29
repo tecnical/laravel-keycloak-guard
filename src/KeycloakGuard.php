@@ -207,7 +207,7 @@ class KeycloakGuard implements Guard
         if (array_key_exists('roles', $realm_roles)) {
             $token_realm_values = (array)$realm_roles['roles'];
 
-            if (Arr::has($role, $token_realm_values)) {
+            if (Arr::has($token_realm_values, $role)) {
                 return true;
             }
         }
@@ -249,7 +249,7 @@ class KeycloakGuard implements Guard
         if (array_key_exists('roles', $realm_roles)) {
             $token_realm_values = (array)$realm_roles['roles'];
 
-            if (Arr::hasAny($roles, $token_realm_values)) {
+            if (Arr::hasAny($token_realm_values, $roles)) {
                 return true;
             }
         }
