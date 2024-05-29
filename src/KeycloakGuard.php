@@ -6,9 +6,11 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
 use Illuminate\Contracts\Auth\UserProvider;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
 use KeycloakGuard\Exceptions\ResourceAccessNotAllowedException;
 use KeycloakGuard\Exceptions\TokenException;
 use KeycloakGuard\Exceptions\UserNotFoundException;
+use function Sodium\randombytes_random16;
 
 class KeycloakGuard implements Guard
 {
@@ -62,10 +64,10 @@ class KeycloakGuard implements Guard
     }
 
     /**
-       * Determine if the current user is authenticated.
-       *
-       * @return bool
-       */
+     * Determine if the current user is authenticated.
+     *
+     * @return bool
+     */
     public function check()
     {
         return !is_null($this->user());
@@ -91,10 +93,10 @@ class KeycloakGuard implements Guard
         return !$this->check();
     }
 
-     /**
+    /**
      * Set the current user.
      *
-     * @param  \Illuminate\Contracts\Auth\Authenticatable  $user
+     * @param \Illuminate\Contracts\Auth\Authenticatable $user
      * @return void
      */
     public function setUser(Authenticatable $user)
@@ -132,7 +134,7 @@ class KeycloakGuard implements Guard
         }
     }
 
-     /**
+    /**
      * Returns full decoded JWT token from athenticated user
      *
      * @return mixed|null
@@ -145,7 +147,7 @@ class KeycloakGuard implements Guard
     /**
      * Validate a user's credentials.
      *
-     * @param  array  $credentials
+     * @param array $credentials
      * @return bool
      */
     public function validate(array $credentials = [])
@@ -162,7 +164,7 @@ class KeycloakGuard implements Guard
             }
 
             if (!$user) {
-                throw new UserNotFoundException("User not found. Credentials: ".json_encode($credentials));
+                throw new UserNotFoundException("User not found. Credentials: " . json_encode($credentials));
             }
         } else {
             $class = $this->provider->getModel();
@@ -189,8 +191,28 @@ class KeycloakGuard implements Guard
         $allowed_resources = explode(',', $this->config['allowed_resources']);
 
         if (count(array_intersect($token_resource_access, $allowed_resources)) == 0) {
-            throw new ResourceAccessNotAllowedException("The decoded JWT token has not a valid `resource_access` allowed by API. Allowed resources by API: ".$this->config['allowed_resources']);
+            throw new ResourceAccessNotAllowedException("The decoded JWT token has not a valid `resource_access` allowed by API. Allowed resources by API: " . $this->config['allowed_resources']);
         }
+    }
+
+    /**
+     * Check if authenticated user has a especific role into realm
+     * @param string $role
+     * @return bool
+     */
+    public function hasRealmRole($role)
+    {
+        $realm_roles = (array)$this->decodedToken->realm_access;
+
+        if (array_key_exists('roles', $realm_roles)) {
+            $token_realm_values = (array)$realm_roles['roles'];
+
+            if (Arr::has($role, $token_realm_values)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -199,7 +221,7 @@ class KeycloakGuard implements Guard
      * @param string $role
      * @return bool
      */
-    public function hasRole($resource, $role)
+    public function hasResourceRole($resource, $role)
     {
         $token_resource_access = (array)$this->decodedToken->resource_access;
 
@@ -207,21 +229,41 @@ class KeycloakGuard implements Guard
             $token_resource_values = (array)$token_resource_access[$resource];
 
             if (array_key_exists('roles', $token_resource_values) &&
-              in_array($role, $token_resource_values['roles'])) {
+                in_array($role, $token_resource_values['roles'])) {
                 return true;
             }
         }
 
         return false;
     }
-    
+
+    /**
+     * Check if authenticated user has a any role into resource
+     * @param string $role
+     * @return bool
+     */
+    public function hasAnyRealmRole(array $roles)
+    {
+        $realm_roles = (array)$this->decodedToken->realm_access;
+
+        if (array_key_exists('roles', $realm_roles)) {
+            $token_realm_values = (array)$realm_roles['roles'];
+
+            if (Arr::hasAny($roles, $token_realm_values)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Check if authenticated user has a any role into resource
      * @param string $resource
      * @param string $role
      * @return bool
      */
-    public function hasAnyRole($resource, array $roles)
+    public function hasAnyResourceRole($resource, array $roles)
     {
         $token_resource_access = (array)$this->decodedToken->resource_access;
 
@@ -279,8 +321,8 @@ class KeycloakGuard implements Guard
     public function hasAnyScope(array $scopes): bool
     {
         return count(array_intersect(
-            $this->scopes(),
-            is_string($scopes) ? [$scopes] : $scopes
-        )) > 0;
+                $this->scopes(),
+                is_string($scopes) ? [$scopes] : $scopes
+            )) > 0;
     }
 }
